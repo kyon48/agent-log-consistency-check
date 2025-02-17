@@ -2,8 +2,8 @@ import re
 import csv
 
 # Define the input log file and output CSV file
-log_file = "agent.log"  # Replace with your actual log file name
-output_csv = "updated_data.csv"
+log_file = "log_data/agent.log"  # Replace with your actual log file name
+output_csv = "processed_data/agent.csv"
 
 # Regular expression to match the Updated data section
 updated_data_pattern = re.compile(r"\[ScheduleTask\] Updated data:\n({.*?})", re.DOTALL)
