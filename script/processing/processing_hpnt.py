@@ -3,9 +3,9 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent.parent
 
-def process_pnit_data(start_date, end_date):
+def process_hpnt_data(start_date, end_date):
     # 파일 경로 설정
-    input_file = ROOT_DIR / "actual_data" / f"pnit_{start_date}_{end_date}.csv"
+    input_file = ROOT_DIR / "actual_data" / f"hpnt_{start_date}_{end_date}.csv"
     output_dir = ROOT_DIR / "processed_data"
     output_dir.mkdir(exist_ok=True)
 
@@ -18,7 +18,6 @@ def process_pnit_data(start_date, end_date):
         '선사': 'ShippingCode',
         '모선항차': 'TerminalVoyageNo',
         '선사항차': 'ShippingArrivalVoyageNo/ShippingDepartVoyageNo',
-        'Head (Bridge) Stern': 'Bow (Bridge) Stern',
         '선명': 'VesselName',
         'ROUTE': 'ShippingRouteCode',
         '반입마감시한': 'CCT',
@@ -37,11 +36,6 @@ def process_pnit_data(start_date, end_date):
         df[['BerthCode', 'AlongSide']] = df['BerthCode(AlongSide)'].str.extract(r'(\w+)\((\w+)\)')
         df.drop(columns=['BerthCode(AlongSide)'], inplace=True)
 
-
-    if 'Bow (Bridge) Stern' in df.columns:
-        df[['Bow', 'Bridge', 'Stern']] = df['Bow (Bridge) Stern'].str.extract(r'(\d+) \((\d+)\) (\d+)')
-        df.drop(columns=['Bow (Bridge) Stern'], inplace=True)
-
     if 'ShippingArrivalVoyageNo/ShippingDepartVoyageNo' in df.columns:
         df[['ShippingArrivalVoyageNo', 'ShippingDepartVoyageNo']] = df['ShippingArrivalVoyageNo/ShippingDepartVoyageNo'].str.split('/', expand=True)
         df.drop(columns=['ShippingArrivalVoyageNo/ShippingDepartVoyageNo'], inplace=True)
@@ -50,8 +44,8 @@ def process_pnit_data(start_date, end_date):
     df['dischargeRemainQnt'] = '0'
     df['loadingCompletedQnt'] = '0'
     df['loadingRemainQnt'] = '0'
-    df['TerminalCode'] = 'PNITC050'
-    df = df.drop(columns=['AMP', '상태'], errors='ignore')
+    df['TerminalCode'] = 'HPNTC050'
+    df = df.drop(columns=['AMP', '상태', '선사도착요청시간'], errors='ignore')
 
     # 날짜/시간 형식 표준화
     datetime_columns = ['ETB', 'ETD', 'CCT']
@@ -60,12 +54,12 @@ def process_pnit_data(start_date, end_date):
             df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
 
     # 결과 저장
-    output_file = output_dir / f"processed_pnit_{start_date}_{end_date}.csv"
+    output_file = output_dir / f"processed_hpnt_{start_date}_{end_date}.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"PNIT 데이터 처리 완료: {output_file}")
+    print(f"HPNT 데이터 처리 완료: {output_file}")
     return df
 
 if __name__ == "__main__":
     # 테스트용 실행
-    process_pnit_data('20250209', '20250312')
+    process_hpnt_data('20250209', '20250312')

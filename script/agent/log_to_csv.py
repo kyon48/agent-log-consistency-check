@@ -38,10 +38,10 @@ terminal_data = {}
 for data in updated_data_matches:
     data_dict = eval(data)
     terminal_code = data_dict.get('terminalCode', 'unknown')
-    
+
     # 전체 데이터용 rows 리스트에 추가
     rows.append(data_dict)
-    
+
     # 터미널별 데이터 분류
     if terminal_code not in terminal_data:
         terminal_data[terminal_code] = []
@@ -64,7 +64,7 @@ for terminal_code, data in terminal_data.items():
     group_name = terminal_groups.get(terminal_code, terminal_code)
     filename = f"agent_{group_name}.csv"
     filepath = os.path.join(output_dir, filename)
-    
+
     with open(filepath, "w", newline="", encoding="utf-8") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=header)
         writer.writeheader()
