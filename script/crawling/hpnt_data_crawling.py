@@ -14,13 +14,13 @@ def format_date(date_str):
     # 'YYYYMMDD'를 '00YYYY/MM/DD'로 변환
     return f"00{date_str[:4]}/{date_str[4:6]}/{date_str[6:]}"
 
-def download_excel_pnit(start_date, end_date):
+def download_excel_hpnt(start_date, end_date):
     # 웹 드라이버 설정 (ChromeDriver 경로를 지정해야 합니다)
     driver = webdriver.Chrome(service= Service(ChromeDriverManager().install()))
 
     try:
-        # PNIT 사이트로 이동
-        driver.get('https://www.pnitl.com/infoservice/vessel/vslScheduleList.jsp')
+        # HPNT 사이트로 이동
+        driver.get('https://www.hpnt.co.kr/infoservice/vessel/vslScheduleList.jsp')
 
         # 날짜 입력
         formatted_start_date = format_date(start_date)
@@ -61,7 +61,7 @@ def download_excel_pnit(start_date, end_date):
 def move_downloaded_file(start_date, end_date):
     download_path = os.path.expanduser('~/Downloads/vslScheduleList.xls')
     target_directory = f"./actual_data/{start_date}_{end_date}"
-    target_filename = f"pnit_{start_date}_{end_date}.xls"
+    target_filename = f"hpnt_{start_date}_{end_date}.xls"
     target_path = os.path.join(target_directory, target_filename)
 
     if not os.path.exists(target_directory):
@@ -70,9 +70,8 @@ def move_downloaded_file(start_date, end_date):
     shutil.move(download_path, target_path)
     print(f"File moved to {target_path}")
 
-
 if __name__ == "__main__":
     start_date = '20250217'
     end_date = '20250318'
-    download_excel_pnit(start_date, end_date)
+    download_excel_hpnt(start_date, end_date)
     move_downloaded_file(start_date, end_date)
