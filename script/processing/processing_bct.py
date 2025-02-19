@@ -3,9 +3,9 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent.parent
 
-def process_hpnt_data(start_date, end_date):
+def process_bct_data(start_date, end_date):
     # 파일 경로 설정
-    input_file = ROOT_DIR / "actual_data" / f"hpnt_{start_date}_{end_date}.csv"
+    input_file = ROOT_DIR / "actual_data" / f"bct_{start_date}_{end_date}.csv"
     output_dir = ROOT_DIR / "processed_data"
     output_dir.mkdir(exist_ok=True)
 
@@ -16,16 +16,19 @@ def process_hpnt_data(start_date, end_date):
     field_mapping = {
         '선석': 'berthCode(alongside)',
         '선사': 'shippingCode',
-        '모선항차': 'terminalShipVoyageNo',
-        '선사항차': 'shippingArrivalVoyageNo/shippingDepartVoyageNo',
+        '모선/항차': 'terminalShipVoyageNo',
+        '입항': 'shippingArrivalVoyageNo',
+        '출항': 'shippingDepartVoyageNo',
+        'CCT': 'cct',
         '선명': 'vesselName',
         'ROUTE': 'shippingRouteCode',
-        '반입마감시한': 'cct',
-        '접안(예정)일시': 'etb',
-        '출항(예정)일시': 'etd',
+        '접안예정시간(ETB)': 'etb',
+        '출항예정시간(ETD)': 'etd',
         '양하': 'dischargeTotalQnt',
         '적하': 'loadingTotalQnt',
-        'Shift': 'shiftQnt'
+        '이적': 'shiftQnt',
+        '모선명': 'vesselName',
+        'ROUTE': 'shippingRouteCode'
     }
 
     # 필드명 변환
@@ -40,19 +43,15 @@ def process_hpnt_data(start_date, end_date):
         df[['shippingArrivalVoyageNo', 'shippingDepartVoyageNo']] = df['shippingArrivalVoyageNo/shippingDepartVoyageNo'].str.split('/', expand=True)
         df.drop(columns=['shippingArrivalVoyageNo/shippingDepartVoyageNo'], inplace=True)
 
-    df['loa'] = ''
-    df['bow'] = ''
-    df['bridge'] = ''
-    df['stern'] = ''
-    df['dischargeCompletedQnt'] = 0
-    df['dischargeRemainQnt'] = 0
-    df['loadingCompletedQnt'] = 0
-    df['loadingRemainQnt'] = 0
-    df['terminalCode'] = 'HPNTC050'
-    df = df.drop(columns=['AMP', '상태', '선사도착요청시간'], errors='ignore')
+    df['dischargeCompletedQnt'] = '0'
+    df['dischargeRemainQnt'] = '0'
+    df['loadingCompletedQnt'] = '0'
+    df['loadingRemainQnt'] = '0'
+    df['terminalCode'] = 'BCTHD010'
+    df = df.drop(columns=['전배TML', '상태', '검역', 'cct'], errors='ignore')
 
     # 날짜/시간 형식 표준화
-    datetime_columns = ['etb', 'etd', 'cct']
+    datetime_columns = ['etb', 'etd']
     for col in datetime_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
@@ -61,12 +60,12 @@ def process_hpnt_data(start_date, end_date):
     df = df.sort_values(by=['vesselName', 'terminalShipVoyageNo'])
 
     # 결과 저장
-    output_file = output_dir / f"processed_hpnt.csv"
+    output_file = output_dir / f"processed_bct.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"HPNT 데이터 처리 완료: {output_file}")
+    print(f"BCT 데이터 처리 완료: {output_file}")
     return df
 
 if __name__ == "__main__":
     # 테스트용 실행
-    process_hpnt_data('20250217', '20250318')
+    process_bct_data('20250217', '20250318')

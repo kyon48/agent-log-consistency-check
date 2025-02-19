@@ -14,57 +14,55 @@ def process_bnct_data(start_date, end_date):
 
     # PNIT 필드명을 표준 필드명으로 매핑
     field_mapping = {
-        '선석': 'BerthCode(AlongSide)',
-        '선사': 'ShippingCode',
-        '모선항차(선사항차) Head (Bridge) Stern': 'TerminalVoyageNo(ShippingArrivalVoyageNo/ShippingDepartVoyageNo)Bow (Bridge) Stern',
-        '선명 (ROUTE)': 'VesselName (ShippingRouteCode)',
-        '반입마감시한': 'CCT',
-        '접안(예정)일시': 'ETB',
-        '출항(예정)일시': 'ETD',
-        '양하/적하/Shift': 'DischargeTotalQnt / LoadingTotalQnt / ShiftQnt',
+        '선석': 'berthCode(alongside)',
+        '선사': 'shippingCode',
+        '모선항차(선사항차) Head (Bridge) Stern': 'terminalShipVoyageNo(shippingArrivalVoyageNo/shippingDepartVoyageNo)bow (bridge) stern',
+        '선명 (ROUTE)': 'vesselName(shippingRouteCode)',
+        '반입마감시한': 'cct',
+        '접안(예정)일시': 'etb',
+        '출항(예정)일시': 'etd',
+        '양하/적하/Shift': 'dischargeTotalQnt / loadingTotalQnt / shiftQnt',
     }
 
     # 필드명 변환
     df = df.rename(columns=field_mapping)
 
     # 복합 필드 분리
-    if 'BerthCode(AlongSide)' in df.columns:
-        df[['BerthCode', 'AlongSide']] = df['BerthCode(AlongSide)'].str.extract(r'(\w+)\((\w+)\)')
-        df.drop(columns=['BerthCode(AlongSide)'], inplace=True)
+    if 'berthCode(alongside)' in df.columns:
+        df[['berthCode', 'alongside']] = df['berthCode(alongside)'].str.extract(r'(\w+)\((\w+)\)')
+        df.drop(columns=['berthCode(alongside)'], inplace=True)
 
-    if 'TerminalVoyageNo(ShippingArrivalVoyageNo/ShippingDepartVoyageNo)Bow (Bridge) Stern' in df.columns:
-        df[['TerminalVoyageNo', 'ShippingArrivalVoyageNo', 'ShippingDepartVoyageNo', 'Bow', 'Bridge', 'Stern']] = df['TerminalVoyageNo(ShippingArrivalVoyageNo/ShippingDepartVoyageNo)Bow (Bridge) Stern'].str.extract(r'(\w+) \((\w+)/(\w+)\)(\d+) \((\d+)\) (\d+)')
-        df.drop(columns=['TerminalVoyageNo(ShippingArrivalVoyageNo/ShippingDepartVoyageNo)Bow (Bridge) Stern'], inplace=True)
+    if 'terminalShipVoyageNo(shippingArrivalVoyageNo/shippingDepartVoyageNo)bow (bridge) stern' in df.columns:
+        df[['terminalShipVoyageNo', 'shippingArrivalVoyageNo', 'shippingDepartVoyageNo', 'bow', 'bridge', 'stern']] = df['terminalShipVoyageNo(shippingArrivalVoyageNo/shippingDepartVoyageNo)bow (bridge) stern'].str.extract(r'(\w+) \(([\w-]+)/([\w-]+)\)(\d+) \((\d+)\) (\d+)')
+        df.drop(columns=['terminalShipVoyageNo(shippingArrivalVoyageNo/shippingDepartVoyageNo)bow (bridge) stern'], inplace=True)
 
-    if 'VesselName (ShippingRouteCode)' in df.columns:
-        df[['VesselName', 'ShippingRouteCode']] = df['VesselName (ShippingRouteCode)'].str.extract(r'(\w+) \((\w+)\)')
-        df.drop(columns=['VesselName (ShippingRouteCode)'], inplace=True)
+    if 'vesselName(shippingRouteCode)' in df.columns:
+        df[['vesselName', 'shippingRouteCode']] = df['vesselName(shippingRouteCode)'].str.extract(r'(.+)\((.+)\)')
+        df.drop(columns=['vesselName(shippingRouteCode)'], inplace=True)
 
-    if 'DischargeTotalQnt / LoadingTotalQnt / ShiftQnt' in df.columns:
-        df[['DischargeTotalQnt', 'LoadingTotalQnt', 'ShiftQnt']] = df['DischargeTotalQnt / LoadingTotalQnt / ShiftQnt'].str.replace(',', '').str.split('/', expand=True)
-        df.drop(columns=['DischargeTotalQnt / LoadingTotalQnt / ShiftQnt'], inplace=True)
-
-    # 숫자 형식 변환
-    df['DischargeTotalQnt'] = df['DischargeTotalQnt'].astype(int)
-    df['LoadingTotalQnt'] = df['LoadingTotalQnt'].astype(int)
-    df['ShiftQnt'] = df['ShiftQnt'].astype(int)
+    if 'dischargeTotalQnt / loadingTotalQnt / shiftQnt' in df.columns:
+        df[['dischargeTotalQnt', 'loadingTotalQnt', 'shiftQnt']] = df['dischargeTotalQnt / loadingTotalQnt / shiftQnt'].str.replace(',', '').str.split(' / ', expand=True)
+        df.drop(columns=['dischargeTotalQnt / loadingTotalQnt / shiftQnt'], inplace=True)
 
     # 고정 필드 추가
     df['dischargeCompletedQnt'] = '0'
     df['dischargeRemainQnt'] = '0'
     df['loadingCompletedQnt'] = '0'
     df['loadingRemainQnt'] = '0'
-    df['TerminalCode'] = 'BNCTC050'
-    df = df.drop(columns=['상태'], errors='ignore')
+    df['terminalCode'] = 'BNCTC050'
+    df = df.drop(columns=['상태','bridge'], errors='ignore')
 
     # 날짜/시간 형식 표준화
-    datetime_columns = ['ETB', 'ETD', 'CCT']
+    datetime_columns = ['etb', 'etd', 'cct']
     for col in datetime_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
 
+    # etb 기준으로 오름차순 정렬
+    df = df.sort_values(by=['vesselName', 'terminalShipVoyageNo'])
+
     # 결과 저장
-    output_file = output_dir / f"processed_bnct_{start_date}_{end_date}.csv"
+    output_file = output_dir / f"processed_bnct.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
     print(f"BNCT 데이터 처리 완료: {output_file}")
@@ -72,4 +70,4 @@ def process_bnct_data(start_date, end_date):
 
 if __name__ == "__main__":
     # 테스트용 실행
-    process_bnct_data('20250209', '20250312')
+    process_bnct_data('20250217', '20250318')

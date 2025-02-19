@@ -14,56 +14,91 @@ def process_porti_data(start_date, end_date):
 
     # 필드명을 표준 필드명으로 매핑
     field_mapping = {
-        '선박명': 'VesselName',
-        '선사 항차': 'ShippingArrivalVoyageNo / ShippingDepartVoyageNo',
-        '터미널명': 'TerminalCode',
-        '운항선사': 'ShippingCode',
-        '항로': 'ShippingRouteCode',
-        '접안방향': 'AlongSide',
-        'A(E)TB': 'ETB',
-        'A(E)TD': 'ETD',
-        '반입마감일시': 'CCT',
-        '양하수량': 'DischargeTotalQnt',
-        '선적수량': 'LoadingTotalQnt',
-        'Shift': 'ShiftQnt'
+        'terminal_vessel_code': 'terminalVesselCode',
+        'terminal_voyage_no': 'terminalVoyageNo',
+        'vessel_name': 'vesselName',
+        'alongside': 'alongside',
+        'etb': 'etb',
+        'etd': 'etd',
+        'cct': 'cct',
+        'atb': 'atb',
+        'atd': 'atd',
+        'discharge_count': 'dischargeTotalQnt',
+        'load_count': 'loadingTotalQnt',
+        'shift_count': 'shiftQnt',
+        'bow_bit_no': 'bow',
+        'bridge_bit_no': 'bridge',
+        'stern_bit_no': 'stern',
+        'shipping_arrival_voyage_no': 'shippingArrivalVoyageNo',
+        'shipping_departure_voyage_no': 'shippingDepartureVoyageNo',
+        'terminal_code': 'terminalCode',
+        'berth_code': 'berthCode',
+        'route_code': 'shippingRouteCode',
+        'shipping_code': 'shippingCode',
+        'terminal_in_year': 'terminalPortArrivalYear',
     }
 
     # 필드명 변환
     df = df.rename(columns=field_mapping)
 
-    # TerminalCode, 필드 값 변환'
-    df.replace('-', '', inplace=True)
-    # df['TerminalCode'] = df['TerminalCode'].replace({'PNIT': 'PNITC050', 'PNC': 'PNCOC010', 'HJNC': 'HJNPC010', 'HPNT': 'HPNTC050', 'BNCT': 'BNCTC050', 'BPTS': 'PECTC050', 'BPTG': 'BICTC010', 'BCT': 'BCTHD010'})
-    df['ShippingArrivalVoyageNo / ShippingDepartVoyageNo'] = df['ShippingArrivalVoyageNo / ShippingDepartVoyageNo'].str.replace(' / ', '/')
+    def create_terminal_ship_voyage_no(row):
+        terminal_code = row['terminalCode']
+        vessel_code = row['terminalVesselCode']
+        voyage_no = int(row['terminalVoyageNo'])
+        year = row['terminalPortArrivalYear']
 
-    # 복합 필드 분리
-    if 'ShippingArrivalVoyageNo / ShippingDepartVoyageNo' in df.columns:
-        df[['ShippingArrivalVoyageNo', 'ShippingDepartVoyageNo']] = df['ShippingArrivalVoyageNo / ShippingDepartVoyageNo'].str.split('/', expand=True)
-        df.drop(columns=['ShippingArrivalVoyageNo / ShippingDepartVoyageNo'], inplace=True)
+        if terminal_code in ['BCTHD010', 'BNCTC050', 'HPNTC050', 'PNITC050']:
+            return f"{vessel_code}{voyage_no:03}"
+        elif terminal_code in ['BICTC010', 'PECTC050']:
+            return f"{vessel_code}-{voyage_no}"
+        elif terminal_code == 'HJNPC010':
+            return f"{vessel_code}-{year}-{voyage_no:04}"
+        elif terminal_code == 'PNCOC010':
+            return f"{vessel_code}-{voyage_no:03}/{year}"
+        else:
+            return f"{vessel_code}{voyage_no:03}"
 
-    # 고정 필드 추가
-    df['ATB'] = ''
-    df['ATD'] = ''
-    df['BerthCode'] = ''
+    df['terminalShipVoyageNo'] = df.apply(create_terminal_ship_voyage_no, axis=1)
+
+    # df['terminalShipVoyageNo'] = df['terminalVesselCode'] + df['terminalVoyageNo'].apply(lambda x: f"{int(x):03}")
+
+    # 필드 제거
+    df = df.drop(columns=['berth_date','departure_date','sys_created_at', 'sys_updated_at', 'sys_deleted_at', 'berth_id', 'route_id', 'vessel_id', 'deleted_yn', 'deleted_at'], errors='ignore')
 
     # 날짜/시간 형식 표준화
-    datetime_columns = ['ETB', 'ETD', 'CCT']
+    datetime_columns = ['etb', 'etd', 'cct', 'atb', 'atd']
     for col in datetime_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    # etb 기준으로 오름차순 정렬
+    df = df.sort_values(by=['vesselName', 'terminalShipVoyageNo'])
 
     # 결과 저장
     output_file = output_dir / f"processed_porti.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
+    terminal_name_mapping = {
+        "BCTHD010": "bct",
+        "BNCTC050": "bnct",
+        "BICTC010": "bptg",
+        "PECTC050": "bpts",
+        "HJNPC010": "hjnc",
+        "HPNTC050": "hpnt",
+        "PNCOC010": "pnc",
+        "PNITC050": "pnit"
+    }
+
     # 터미널별로 데이터 분할 및 저장
-    for terminal_code, group in df.groupby('TerminalCode'):
-        terminal_output_file = output_dir / f"processed_porti_{terminal_code}.csv"
+    for terminal_code, group in df.groupby('terminalCode'):
+        terminal_name = terminal_name_mapping.get(terminal_code, terminal_code.lower())
+        terminal_output_file = output_dir / f"processed_porti_{terminal_name}.csv"
         group.to_csv(terminal_output_file, index=False, encoding='utf-8')
         print(f"터미널 {terminal_code} 데이터 처리 완료: {terminal_output_file}")
 
     print(f"PORTI 데이터 처리 완료: {output_file}")
     return df
+
 
 if __name__ == "__main__":
     # 테스트용 실행

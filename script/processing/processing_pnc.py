@@ -14,47 +14,54 @@ def process_pnc_data(start_date, end_date):
 
     # PNC 필드명을 표준 필드명으로 매핑
     field_mapping = {
-        '모선명': 'VesselName',
-        '모선코드': 'TerminalVoyageNo',
-        '선사항차': 'ShippingArrivalVoyageNo/ShippingDepartVoyageNo',
-        '운항선사': 'ShippingCode',
-        '항로': 'ShippingRouteCode',
-        '접안방향': 'AlongSide',
-        '접안(예정)일시': 'ETB',
-        '출항(예정)일시': 'ETD',
-        '선석': 'BerthCode',
-        '반입마감일시': 'CCT',
-        '양하수량': 'DischargeTotalQnt',
-        '선적수량': 'LoadingTotalQnt',
-        'Shift': 'ShiftQnt',
+        '모선명': 'vesselName',
+        '모선코드': 'terminalShipVoyageNo',
+        '선사항차': 'shippingArrivalVoyageNo/shippingDepartVoyageNo',
+        '운항선사': 'shippingCode',
+        '항로': 'shippingRouteCode',
+        '접안방향': 'alongside',
+        '접안(예정)일시': 'etb',
+        '출항(예정)일시': 'etd',
+        '선석': 'berthCode',
+        '반입마감일시': 'cct',
+        '양하수량': 'dischargeTotalQnt',
+        '선적수량': 'loadingTotalQnt',
+        'Shift': 'shiftQnt',
     }
 
     # 필드명 변환
     df = df.rename(columns=field_mapping)
 
     # 복합 필드 분리
-    if 'ShippingArrivalVoyageNo/ShippingDepartVoyageNo' in df.columns:
-        df[['ShippingArrivalVoyageNo', 'ShippingDepartVoyageNo']] = df['ShippingArrivalVoyageNo/ShippingDepartVoyageNo'].str.split('/', expand=True)
-        df.drop(columns=['ShippingArrivalVoyageNo/ShippingDepartVoyageNo'], inplace=True)
+    if 'shippingArrivalVoyageNo/shippingDepartVoyageNo' in df.columns:
+        df[['shippingArrivalVoyageNo', 'shippingDepartVoyageNo']] = df['shippingArrivalVoyageNo/shippingDepartVoyageNo'].str.split('/', expand=True)
+        df.drop(columns=['shippingArrivalVoyageNo/shippingDepartVoyageNo'], inplace=True)
 
     # 고정 필드 추가
-    df['TerminalCode'] = 'PNCOC010'
-    df['dischargeCompletedQnt'] = '0'
-    df['dischargeRemainQnt'] = '0'
-    df['loadingCompletedQnt'] = '0'
-    df['loadingRemainQnt'] = '0'
+    df['loa'] = ''
+    df['bow'] = ''
+    df['bridge'] = ''
+    df['stern'] = ''
+    df['dischargeCompletedQnt'] = 0
+    df['dischargeRemainQnt'] = 0
+    df['loadingCompletedQnt'] = 0
+    df['loadingRemainQnt'] = 0
+    df['terminalCode'] = 'PNCOC010'
 
-    # AlongSide 값 변환
-    df['AlongSide'] = df['AlongSide'].replace({'Port': 'P', 'Star': 'S'})
+    # alongside 값 변환
+    df['alongside'] = df['alongside'].replace({'Port': 'P', 'Star': 'S'})
 
     # 날짜/시간 형식 표준화
-    datetime_columns = ['ETB', 'ETD', 'CCT']
+    datetime_columns = ['etb', 'etd', 'cct']
     for col in datetime_columns:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col]).dt.strftime('%Y-%m-%d %H:%M:%S')
 
+    # etb 기준으로 오름차순 정렬
+    df = df.sort_values(by=['vesselName', 'terminalShipVoyageNo'])
+
     # 결과 저장
-    output_file = output_dir / f"processed_pnc_{start_date}_{end_date}.csv"
+    output_file = output_dir / f"processed_pnc.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
     print(f"PNC 데이터 처리 완료: {output_file}")
@@ -62,4 +69,4 @@ def process_pnc_data(start_date, end_date):
 
 if __name__ == "__main__":
     # 테스트용 실행
-    process_pnc_data('20250209', '20250312')
+    process_pnc_data('20250217', '20250318')
