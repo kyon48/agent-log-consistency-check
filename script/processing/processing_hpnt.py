@@ -1,4 +1,5 @@
 import pandas as pd
+import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).parent.parent.parent
@@ -12,25 +13,6 @@ def process_hpnt_data(start_date, end_date):
     # 엑셀 파일 읽기
     df = pd.read_csv(input_file, encoding='CP949')
 
-    # PNIT 필드명을 표준 필드명으로 매핑
-    field_mapping = {
-        '선석': 'berthCode(alongside)',
-        '선사': 'shippingCode',
-        '모선항차': 'terminalShipVoyageNo',
-        '선사항차': 'shippingArrivalVoyageNo/shippingDepartVoyageNo',
-        '선명': 'vesselName',
-        'ROUTE': 'shippingRouteCode',
-        '반입마감시한': 'cct',
-        '접안(예정)일시': 'etb',
-        '출항(예정)일시': 'etd',
-        '양하': 'dischargeTotalQnt',
-        '적하': 'loadingTotalQnt',
-        'Shift': 'shiftQnt'
-    }
-
-    # 필드명 변환
-    df = df.rename(columns=field_mapping)
-
     # 복합 필드 분리
     if 'berthCode(alongside)' in df.columns:
         df[['berthCode', 'alongside']] = df['berthCode(alongside)'].str.extract(r'(\w+)\((\w+)\)')
@@ -39,17 +21,6 @@ def process_hpnt_data(start_date, end_date):
     if 'shippingArrivalVoyageNo/shippingDepartVoyageNo' in df.columns:
         df[['shippingArrivalVoyageNo', 'shippingDepartVoyageNo']] = df['shippingArrivalVoyageNo/shippingDepartVoyageNo'].str.split('/', expand=True)
         df.drop(columns=['shippingArrivalVoyageNo/shippingDepartVoyageNo'], inplace=True)
-
-    df['loa'] = ''
-    df['bow'] = ''
-    df['bridge'] = ''
-    df['stern'] = ''
-    df['dischargeCompletedQnt'] = 0
-    df['dischargeRemainQnt'] = 0
-    df['loadingCompletedQnt'] = 0
-    df['loadingRemainQnt'] = 0
-    df['terminalCode'] = 'HPNTC050'
-    df = df.drop(columns=['AMP', '상태', '선사도착요청시간'], errors='ignore')
 
     # 날짜/시간 형식 표준화
     datetime_columns = ['etb', 'etd', 'cct']
@@ -67,6 +38,14 @@ def process_hpnt_data(start_date, end_date):
     print(f"HPNT 데이터 처리 완료: {output_file}")
     return df
 
+def main():
+    if len(sys.argv) != 3:
+        print("Usage: python hjnc_data_crawling.py <start_date> <end_date>")
+        sys.exit(1)
+
+    start_date = sys.argv[1]
+    end_date = sys.argv[2]
+    process_hpnt_data(start_date, end_date)
+
 if __name__ == "__main__":
-    # 테스트용 실행
-    process_hpnt_data('20250217', '20250318')
+    main()

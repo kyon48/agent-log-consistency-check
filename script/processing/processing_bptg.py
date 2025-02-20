@@ -12,31 +12,6 @@ def process_bptg_data(start_date, end_date):
     # 엑셀 파일 읽기
     df = pd.read_csv(input_file, encoding='CP949')
 
-    # BPTG 필드명을 표준 필드명으로 매핑
-    field_mapping = {
-        '선석': 'berthCode',
-        '모선항차': 'terminalShipVoyageNo',
-        '선박명': 'vesselName',
-        '접안': 'alongside',
-        '선사': 'shippingCode',
-        '입항 예정일시': 'etb',
-        '입항일시': 'atb',
-        '작업 완료일시': 'workEndDateTime',
-        '출항일시': 'etd',
-        '반입 마감일시': 'cct',
-        '양하': 'dischargeTotalQnt',
-        '선적': 'loadingTotalQnt',
-        'S/H': 'shiftQnt',
-        '항로': 'shippingRouteCode',
-    }
-
-    # 필드명 변환
-    df = df.rename(columns=field_mapping)
-
-    # 고정 필드 추가
-    df['terminalCode'] = 'BICTC010'
-    df = df.drop(columns=['전배', '검역'], errors='ignore')
-
     # 날짜/시간 형식 표준화
     datetime_columns = ['etb', 'etd', 'cct', 'atb', 'workEndDateTime']
     for col in datetime_columns:
