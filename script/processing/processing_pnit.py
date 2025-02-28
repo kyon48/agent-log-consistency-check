@@ -39,7 +39,7 @@ def process_pnit_data(start_date, end_date):
     output_file = output_dir / f"processed_pnit.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"PNIT 데이터 처리 완료: {output_file}")
+    print(f"PNIT data processing completed: {output_file}")
     return df
 
 def main():

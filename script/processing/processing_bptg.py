@@ -25,7 +25,7 @@ def process_bptg_data(start_date, end_date):
     output_file = output_dir / f"processed_bptg.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"BPTG 데이터 처리 완료: {output_file}")
+    print(f"BPTG data processing completed: {output_file}")
     return df
 
 if __name__ == "__main__":

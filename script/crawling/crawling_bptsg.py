@@ -102,14 +102,14 @@ def convert_txt_to_csv(terminal_type, start_date, end_date):
     df.columns = [column_mapping.get(col, col) for col in df.columns]
     df = df.drop(columns=['number', 'shift', 'quarantine'], errors='ignore')
 
+    df['vesselName'] = df['vesselName'].str.replace(r'\(수리선박\)', '', regex=True)
+
     # CSV 저장
     df.to_csv(csv_file_path, index=False, encoding='utf-8')
     print(f"Data saved to {csv_file_path}")
 
     # 텍스트 파일 삭제
     os.remove(txt_file_path)
-    print(f"Deleted {txt_file_path}")
-
 
 def main():
     if len(sys.argv) != 3:

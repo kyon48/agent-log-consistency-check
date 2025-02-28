@@ -18,13 +18,13 @@ terminal_name_mapping = {
     "DGTBC050": "dgt"
 }
 
-def compare_data(terminal_file, porti_file, output_file):
+def compare_data(scrap_file, porti_file, output_file):
     # 데이터 읽기
-    terminal_df = pd.read_csv(terminal_file, encoding='utf-8')
+    scrap_df = pd.read_csv(scrap_file, encoding='utf-8')
     porti_df = pd.read_csv(porti_file, encoding='utf-8')
 
     # terminalShipVoyageNo를 기준으로 병합
-    merged_df = terminal_df.merge(porti_df, on='terminalShipVoyageNo', how='outer', suffixes=('_terminal', '_porti'))
+    merged_df = scrap_df.merge(porti_df, on='terminalShipVoyageNo', how='outer', suffixes=('_scrap', '_porti'))
 
     # terminalShipVoyageNo를 맨 앞에 두고 나머지 컬럼을 사전 순으로 정렬
     sorted_columns = ['terminalShipVoyageNo'] + sorted([col for col in merged_df.columns if col != 'terminalShipVoyageNo'])
@@ -47,10 +47,10 @@ def compare_data(terminal_file, porti_file, output_file):
             cell = ws.cell(row=row_num, column=col_num)
             # 컬럼 이름에서 접미사를 제거하고 비교
             base_col_name = col_name.rsplit('_', 1)[0]
-            terminal_value = getattr(row, f"{base_col_name}_terminal", None)
+            scrap_value = getattr(row, f"{base_col_name}_scrap", None)
             porti_value = getattr(row, f"{base_col_name}_porti", None)
             # 두 값이 같거나 둘 다 비어 있는 경우 초록색
-            if terminal_value == porti_value or (pd.isna(terminal_value) and pd.isna(porti_value)):
+            if scrap_value == porti_value or (pd.isna(scrap_value) and pd.isna(porti_value)):
                 cell.fill = green_fill
             else:
                 cell.fill = red_fill
@@ -58,9 +58,10 @@ def compare_data(terminal_file, porti_file, output_file):
     wb.save(output_file)
     print(f"정합성 비교 결과가 {output_file}에 저장되었습니다.")
 
+
 if __name__ == "__main__":
     for _, terminal_name in terminal_name_mapping.items():
-        terminal_file = ROOT_DIR / "processed_data" / f"processed_{terminal_name}.csv"
-        porti_file = ROOT_DIR / "processed_data" / f"processed_porti_{terminal_name}.csv"
-        output_file = ROOT_DIR / "comparison_results" / f"comparison_{terminal_name}.xlsx"
-        compare_data(terminal_file, porti_file, output_file)
+        scrap_file = ROOT_DIR / "processed_data" / "scrapdb" / f"processed_scrapdb_{terminal_name}.csv"
+        porti_file = ROOT_DIR / "processed_data" / "porti" / f"processed_porti_{terminal_name}.csv"
+        output_file = ROOT_DIR / "comparison_results" / f"comparison_scrapdb_porti_{terminal_name}.xlsx"
+        compare_data(scrap_file, porti_file, output_file)

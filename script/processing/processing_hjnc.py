@@ -18,11 +18,6 @@ def process_hjnc_data(start_date, end_date):
         df.drop(columns=['shippingArrivalVoyageNo-shippingDepartVoyageNo'], inplace=True)
 
     # 고정 필드 추가
-    df['loa'] = ''
-    df['dischargeCompletedQnt'] = 0
-    df['dischargeRemainQnt'] = 0
-    df['loadingCompletedQnt'] = 0
-    df['loadingRemainQnt'] = 0
     df['terminalCode'] = 'HJNPC010'
 
     # 날짜/시간 형식 표준화
@@ -40,7 +35,7 @@ def process_hjnc_data(start_date, end_date):
     output_file = output_dir / f"processed_hjnc.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"HJNC 데이터 처리 완료: {output_file}")
+    print(f"HJNC data processing completed: {output_file}")
     return df
 
 if __name__ == "__main__":

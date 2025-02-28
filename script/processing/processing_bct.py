@@ -43,10 +43,6 @@ def process_bct_data(start_date, end_date):
         df[['shippingArrivalVoyageNo', 'shippingDepartVoyageNo']] = df['shippingArrivalVoyageNo/shippingDepartVoyageNo'].str.split('/', expand=True)
         df.drop(columns=['shippingArrivalVoyageNo/shippingDepartVoyageNo'], inplace=True)
 
-    df['dischargeCompletedQnt'] = '0'
-    df['dischargeRemainQnt'] = '0'
-    df['loadingCompletedQnt'] = '0'
-    df['loadingRemainQnt'] = '0'
     df['terminalCode'] = 'BCTHD010'
     df = df.drop(columns=['전배TML', '상태', '검역', 'cct'], errors='ignore')
 
@@ -63,7 +59,7 @@ def process_bct_data(start_date, end_date):
     output_file = output_dir / f"processed_bct.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"BCT 데이터 처리 완료: {output_file}")
+    print(f"BCT data processing completed: {output_file}")
     return df
 
 if __name__ == "__main__":

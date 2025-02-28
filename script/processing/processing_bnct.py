@@ -32,10 +32,6 @@ def process_bnct_data(start_date, end_date):
         df.drop(columns=['dischargeTotalQnt / loadingTotalQnt / shiftQnt'], inplace=True)
 
     # 고정 필드 추가
-    df['dischargeCompletedQnt'] = '0'
-    df['dischargeRemainQnt'] = '0'
-    df['loadingCompletedQnt'] = '0'
-    df['loadingRemainQnt'] = '0'
     df['terminalCode'] = 'BNCTC050'
     df = df.drop(columns=['상태'], errors='ignore')
 
@@ -52,7 +48,7 @@ def process_bnct_data(start_date, end_date):
     output_file = output_dir / f"processed_bnct.csv"
     df.to_csv(output_file, index=False, encoding='utf-8')
 
-    print(f"BNCT 데이터 처리 완료: {output_file}")
+    print(f"BNCT data processing completed: {output_file}")
     return df
 
 def extract_data_from_html(html_content):

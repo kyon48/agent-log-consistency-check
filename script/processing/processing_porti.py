@@ -6,7 +6,7 @@ ROOT_DIR = Path(__file__).parent.parent.parent
 def process_porti_data(start_date, end_date):
     # 파일 경로 설정
     input_file = ROOT_DIR / "actual_data" / f"porti_{start_date}_{end_date}.csv"
-    output_dir = ROOT_DIR / "processed_data"
+    output_dir = ROOT_DIR / "processed_data" / "porti"
     output_dir.mkdir(exist_ok=True)
 
     # 엑셀 파일 읽기
@@ -44,17 +44,24 @@ def process_porti_data(start_date, end_date):
     def create_terminal_ship_voyage_no(row):
         terminal_code = row['terminalCode']
         vessel_code = row['terminalVesselCode']
-        voyage_no = int(row['terminalVoyageNo'])
+        if terminal_code == 'GCTOC050':
+            voyage_no = int(row['terminalVoyageNo'][-2:])
+        else:
+            voyage_no = int(row['terminalVoyageNo'])
         year = row['terminalPortArrivalYear']
 
         if terminal_code in ['BCTHD010', 'BNCTC050', 'HPNTC050', 'PNITC050']:
             return f"{vessel_code}{voyage_no:03}"
         elif terminal_code in ['BICTC010', 'PECTC050']:
             return f"{vessel_code}-{voyage_no}"
-        elif terminal_code == 'HJNPC010':
-            return f"{vessel_code}-{year}-{voyage_no:04}"
         elif terminal_code == 'PNCOC010':
+            return f"{vessel_code}-{voyage_no:03}"
+        elif terminal_code == 'DGTBC050':
             return f"{vessel_code}-{voyage_no:03}/{year}"
+        elif terminal_code == 'HJNPC010':
+            return f"{vessel_code}-{voyage_no:04}"
+        elif terminal_code == 'GCTOC050':
+            return f"{vessel_code}{voyage_no:02}"
         else:
             return f"{vessel_code}{voyage_no:03}"
 
@@ -63,7 +70,7 @@ def process_porti_data(start_date, end_date):
     # df['terminalShipVoyageNo'] = df['terminalVesselCode'] + df['terminalVoyageNo'].apply(lambda x: f"{int(x):03}")
 
     # 필드 제거
-    df = df.drop(columns=['berth_date','departure_date','sys_created_at', 'sys_updated_at', 'sys_deleted_at', 'berth_id', 'route_id', 'vessel_id', 'deleted_yn', 'deleted_at'], errors='ignore')
+    df = df.drop(columns=['id','berth_date','departure_date','sys_created_at', 'sys_updated_at', 'sys_deleted_at', 'berth_id', 'route_id', 'vessel_id', 'deleted_yn', 'deleted_at'], errors='ignore')
 
     # 날짜/시간 형식 표준화
     datetime_columns = ['etb', 'etd', 'cct', 'atb', 'atd']
@@ -86,7 +93,9 @@ def process_porti_data(start_date, end_date):
         "HJNPC010": "hjnc",
         "HPNTC050": "hpnt",
         "PNCOC010": "pnc",
-        "PNITC050": "pnit"
+        "PNITC050": "pnit",
+        "GCTOC050": "hktg",
+        "DGTBC050": "dgt"
     }
 
     # 터미널별로 데이터 분할 및 저장
@@ -94,9 +103,8 @@ def process_porti_data(start_date, end_date):
         terminal_name = terminal_name_mapping.get(terminal_code, terminal_code.lower())
         terminal_output_file = output_dir / f"processed_porti_{terminal_name}.csv"
         group.to_csv(terminal_output_file, index=False, encoding='utf-8')
-        print(f"터미널 {terminal_code} 데이터 처리 완료: {terminal_output_file}")
 
-    print(f"PORTI 데이터 처리 완료: {output_file}")
+    print(f"PORTI data processing completed: {output_file}")
     return df
 
 
