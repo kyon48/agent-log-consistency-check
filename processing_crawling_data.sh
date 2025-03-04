@@ -13,10 +13,11 @@ fi
 
 # 각 크롤링 스크립트를 실행합니다.
 # python3 script/crawling/crawling_bct.py $START_DATE $END_DATE
-python3 script/crawling/crawling_bnct.py $START_DATE $END_DATE
-python3 script/crawling/crawling_bptsg.py $START_DATE $END_DATE
-python3 script/crawling/crawling_hjnc.py $START_DATE $END_DATE
-python3 script/crawling/crawling_hpnt.py $START_DATE $END_DATE
-python3 script/crawling/crawling_pnc.py $START_DATE $END_DATE
-python3 script/crawling/crawling_pnit.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_bnct.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_bptsg.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_hjnc.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_hpnt.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_pnc.py $START_DATE $END_DATE
+# python3 script/crawling/crawling_pnit.py $START_DATE $END_DATE
 python3 script/crawling/crawling_porti.py $START_DATE $END_DATE
+python3 script/crawling/crawling_scrapdb.py $START_DATE $END_DATE

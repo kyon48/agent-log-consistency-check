@@ -36,6 +36,16 @@ def process_porti_data(start_date, end_date):
         'route_code': 'shippingRouteCode',
         'shipping_code': 'shippingCode',
         'terminal_in_year': 'terminalPortArrivalYear',
+        'loa': 'loa',
+        'call_sgn': 'callSgn',
+        'mmsi': 'mmsi',
+        'teu': 'teu',
+        'gtn': 'gtn',
+        'imo_no': 'imoNo',
+        'discharge_completed': 'dischargeCompleted',
+        'discharge_remain': 'dischargeRemain',
+        'load_completed': 'loadCompleted',
+        'load_remain': 'loadRemain'
     }
 
     # 필드명 변환
@@ -70,7 +80,7 @@ def process_porti_data(start_date, end_date):
     # df['terminalShipVoyageNo'] = df['terminalVesselCode'] + df['terminalVoyageNo'].apply(lambda x: f"{int(x):03}")
 
     # 필드 제거
-    df = df.drop(columns=['id','berth_date','departure_date','sys_created_at', 'sys_updated_at', 'sys_deleted_at', 'berth_id', 'route_id', 'vessel_id', 'deleted_yn', 'deleted_at'], errors='ignore')
+    df = df.drop(columns=['id','berth_date','departure_date','sys_created_at', 'sys_updated_at', 'sys_deleted_at', 'berth_id', 'route_id', 'vessel_id', 'deleted_yn', 'deleted_at', 'operation_started_at', 'operation_ended_at'], errors='ignore')
 
     # 날짜/시간 형식 표준화
     datetime_columns = ['etb', 'etd', 'cct', 'atb', 'atd']

@@ -23,10 +23,15 @@ def export_excel_porti(start_date, end_date):
 
         # 쿼리 작성
         query = f"""
-        SELECT * FROM vessel_voyages
-        WHERE (berth_date BETWEEN '{x_day}' AND '{y_day}')
-        OR (departure_date BETWEEN '{x_day}' AND '{y_day}')
-        OR (berth_date <= '{x_day}' AND departure_date >= '{y_day}')
+        SELECT vv.*, v.call_sgn, v.gtn, v.imo_no, v.length, v.width, v.mmsi, v.teu,
+               vo.discharge_completed, vo.discharge_remain, vo.load_completed, vo.load_remain,
+               vo.operation_started_at, vo.operation_ended_at
+        FROM vessel_operations vo
+        JOIN vessel_voyages vv ON vo.vessel_voyage_id = vv.id
+        JOIN vessels v ON vv.vessel_id = v.id
+        WHERE (vv.berth_date BETWEEN '{x_day}' AND '{y_day}')
+        OR (vv.departure_date BETWEEN '{x_day}' AND '{y_day}')
+        OR (vv.berth_date <= '{x_day}' AND vv.departure_date >= '{y_day}')
         """
 
         # 데이터베이스에서 데이터 가져오기
