@@ -60,6 +60,11 @@ def compare_data(scrap_file, porti_file, output_file):
 
 
 if __name__ == "__main__":
+    scrap_file = ROOT_DIR / "processed_data" / "scrapdb" / f"processed_scrapdb.csv"
+    porti_file = ROOT_DIR / "processed_data" / "porti" / f"processed_porti.csv"
+    output_file = ROOT_DIR / "comparison_results" / f"comparison_scrapdb_porti.xlsx"
+    compare_data(scrap_file, porti_file, output_file)
+
     for _, terminal_name in terminal_name_mapping.items():
         scrap_file = ROOT_DIR / "processed_data" / "scrapdb" / f"processed_scrapdb_{terminal_name}.csv"
         porti_file = ROOT_DIR / "processed_data" / "porti" / f"processed_porti_{terminal_name}.csv"

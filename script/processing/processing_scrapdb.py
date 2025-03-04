@@ -41,6 +41,14 @@ def process_scrapdb_data(start_date, end_date):
         'vesselName': 'vesselName',
         'workEndDateTime': 'workEndDateTime',
         'workStartDateTime': 'workStartDateTime',
+        'callsign': 'callsign',
+        'dischargeCompletedQnt': 'dischargeCompletedQnt',
+        'dischargeRemainQnt': 'dischargeRemainQnt',
+        'loadingCompletedQnt': 'loadingCompletedQnt',
+        'loadingRemainQnt': 'loadingRemainQnt',
+        'imoCode': 'imoCode',
+        'teu': 'teu',
+        'gtn': 'gtn',
     }
 
     # 필드명 변환
@@ -75,7 +83,7 @@ def process_scrapdb_data(start_date, end_date):
     df = reinforce_column(df)
 
     # 필드 제거
-    df = df.drop(columns=['id','callsign','dischargeCompletedQnt','dischargeRemainQnt','loadingCompletedQnt','loadingRemainQnt','imoCode', 'teu', 'gtn','remark','terminalPortArrivalYear','fromBit','toBit','jobStatus','created_at','updated_at'], errors='ignore')
+    df = df.drop(columns=['id','remark','fromBit','toBit','jobStatus','created_at','updated_at'], errors='ignore')
 
     # etb 기준으로 오름차순 정렬
     df = df.sort_values(by=['vesselName', 'terminalShipVoyageNo', 'etb'])
